@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.28307.1022
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MailConsole", "MailConsole\MailConsole.csproj", "{CEDFA625-A72A-4831-A687-3B337DBFB87C}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CEDFA625-A72A-4831-A687-3B337DBFB87C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CEDFA625-A72A-4831-A687-3B337DBFB87C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CEDFA625-A72A-4831-A687-3B337DBFB87C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CEDFA625-A72A-4831-A687-3B337DBFB87C}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {E256EC33-9209-4EDD-A139-C2F79ABEC739}
+	EndGlobalSection
+EndGlobal

@@ -1,0 +1,12 @@
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\bin\Debug\netcoreapp2.2\MailConsole.deps.json
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\bin\Debug\netcoreapp2.2\MailConsole.runtimeconfig.json
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\bin\Debug\netcoreapp2.2\MailConsole.runtimeconfig.dev.json
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\bin\Debug\netcoreapp2.2\MailConsole.dll
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\obj\Debug\netcoreapp2.2\MailConsole.csproj.CoreCompileInputs.cache
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\obj\Debug\netcoreapp2.2\MailConsole.AssemblyInfoInputs.cache
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\obj\Debug\netcoreapp2.2\MailConsole.AssemblyInfo.cs
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\bin\Debug\netcoreapp2.2\appsettings.json
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\bin\Debug\netcoreapp2.2\MailConsole.pdb
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\obj\Debug\netcoreapp2.2\MailConsole.dll
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\obj\Debug\netcoreapp2.2\MailConsole.pdb
+D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\obj\Debug\netcoreapp2.2\MailConsole.csprojAssemblyReference.cache
