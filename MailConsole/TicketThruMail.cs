@@ -31,6 +31,7 @@ namespace MailerConsole
         public static  MySqlCommand cmd = new MySqlCommand();
         public static MySqlDataAdapter sda = new MySqlDataAdapter();
 
+        ErrorLogs errorlogs = new ErrorLogs();
 
         public TicketThruMail(string Connectionstring, string[] CustomerKeyword, string[] TicketKeyword)
         {
@@ -98,7 +99,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw ex;
+                errorlogs.SendErrorToText(ex);
             }
             finally
             {
@@ -117,7 +118,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw ex;
+                errorlogs.SendErrorToText(ex);
             }
             EncodingFinder.FallbackDecoder = CustomFallbackDecoder;
         }
@@ -180,7 +181,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw ex;
+                errorlogs.SendErrorToText(ex);
             }
             return strArrMessage;
         }
@@ -248,7 +249,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw ex;
+                errorlogs.SendErrorToText(ex);
             }
         }
 
@@ -304,7 +305,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw (ex);
+                errorlogs.SendErrorToText(ex);
             }
             finally
             {
@@ -355,7 +356,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw;
+                errorlogs.SendErrorToText(ex);
             }
 
             return RetrivedID;
@@ -403,7 +404,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw (ex);
+                errorlogs.SendErrorToText(ex);
             }
             finally
             {
@@ -513,7 +514,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw (ex);
+                errorlogs.SendErrorToText(ex);
             }
             finally
             {
@@ -528,5 +529,6 @@ namespace MailerConsole
 
         #endregion
 
+        
     }
 }

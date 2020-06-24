@@ -10,4 +10,12 @@ namespace MailConsole
         public string Ticketkeyword { get; set; }
         public string Customerkeyword { get; set; }
     }
+
+    public class MySettingsConfigMoal
+    {
+        public string Connectionstring { get; set; }
+        public string IntervalInMinutes { get; set; }
+        public string Ticketkeyword { get; set; }
+        public string Customerkeyword { get; set; }
+    }
 }

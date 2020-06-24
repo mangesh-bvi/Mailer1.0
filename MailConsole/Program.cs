@@ -5,8 +5,7 @@ using System.Collections.Generic;
 using System.Data;
 using System.IO;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Timers;
+using System.Threading;
 
 namespace MailConsole
 {
@@ -15,7 +14,7 @@ namespace MailConsole
         private static string _Connectionstring;
         public static string[] _CustomerKeyword = null;// System.Configuration.ConfigurationManager.AppSettings["customerkeyword"].Split(new char [] { ','},StringSplitOptions.RemoveEmptyEntries);
         public static string[] _TicketKeyword = null;  // System.Configuration.ConfigurationManager.AppSettings["ticketkeyword"].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-
+        ErrorLogs errorlogs = new ErrorLogs();
         #region variables
 
         List<TicketingMailerModel> MailerList = new List<TicketingMailerModel>();
@@ -40,16 +39,16 @@ namespace MailConsole
                .AddUserSecrets<Program>()
                .AddEnvironmentVariables();
 
-            IConfigurationRoot configuration = builder.Build();
-            var mySettingsConfig = new MySettingsConfig();
-            configuration.GetSection("MySettings").Bind(mySettingsConfig);
+                IConfigurationRoot configuration = builder.Build();
+                var mySettingsConfig = new MySettingsConfig();
+                configuration.GetSection("MySettings").Bind(mySettingsConfig);
 
-            _Connectionstring = configuration.GetConnectionString("DefaultConnection");
-            string interval = mySettingsConfig.IntervalInMinutes;
+                _Connectionstring = configuration.GetConnectionString("DefaultConnection");
+                string interval = mySettingsConfig.IntervalInMinutes;
 
                 _CustomerKeyword = mySettingsConfig.Customerkeyword.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 _TicketKeyword = mySettingsConfig.Ticketkeyword.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                //obj.CreateTicket();
+                obj.CreateTicket();
                 //obj.AddToMailerQueue();
                 double intervalInMinutes = Convert.ToDouble(interval);// 60 * 5000; // milliseconds to one min
 
@@ -57,38 +56,69 @@ namespace MailConsole
                 //obj.CreateTicket();
                 //obj.AddToMailerQueue();
 
-                Timer checkForTime = new Timer(intervalInMinutes);
-                checkForTime.Elapsed += new ElapsedEventHandler(obj.CallEveryMin);
-                checkForTime.Enabled = true;
+                Thread _Individualprocessthread = new Thread(new ThreadStart(obj.CallEveryMin));
+                _Individualprocessthread.Start();
+
+                //Timer checkForTime = new Timer(intervalInMinutes);
+                //checkForTime.Elapsed += new ElapsedEventHandler(obj.CallEveryMin);
+                //checkForTime.Enabled = true;
 
                 //obj.CallEveryMin();
             }
             catch (Exception ex)
             {
-                Console.WriteLine(ex.ToString() + "\n" + ex.InnerException);
+
+                //Console.WriteLine(ex.ToString() + "\n" + ex.InnerException);
             }
 
 
 
-            Console.ReadLine();
+            // Console.ReadLine();
         }
 
-        public void CallEveryMin(object sender, ElapsedEventArgs e)
-        // public void CallEveryMin()
+
+        public void CallEveryMin()
         {
-            try
-            {
-                Task.Factory.StartNew(CreateTicket);
-                Task.Factory.StartNew(AddToMailerQueue);
+            var builder = new ConfigurationBuilder()
+               .SetBasePath(Directory.GetCurrentDirectory())
+               .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+               .AddUserSecrets<Program>()
+               .AddEnvironmentVariables();
 
-                // CreateTicket();
-                //AddToMailerQueue();
-            }
-            catch (Exception ex)
+            IConfigurationRoot configuration = builder.Build();
+            var mySettingsConfig = new MySettingsConfig();
+            configuration.GetSection("MySettings").Bind(mySettingsConfig);
+
+            _Connectionstring = configuration.GetConnectionString("DefaultConnection");
+            string interval = mySettingsConfig.IntervalInMinutes;
+
+
+            while (true)
             {
-                throw ex;
+                CreateTicket();
+                AddToMailerQueue();
+                AddStoreToMailerQueue();
+                Thread.Sleep(Convert.ToInt32(interval));
             }
         }
+
+
+        //public void CallEveryMin(object sender, ElapsedEventArgs e)
+        //// public void CallEveryMin()
+        //{
+        //    try
+        //    {
+        //        Task.Factory.StartNew(CreateTicket);
+        //        Task.Factory.StartNew(AddToMailerQueue);
+
+        //        // CreateTicket();
+        //        //AddToMailerQueue();
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        throw ex;
+        //    }
+        //}
 
         public void AddToMailerQueue()
         {
@@ -139,7 +169,7 @@ namespace MailConsole
                     ConsoleMsg += "Mail Failed for " + failcount + " records \n";
                     ConsoleMsg += "Mail Failed due to SMTP error for " + smtperrorcount + " records \n";
 
-                    Console.WriteLine(ConsoleMsg);
+                    // Console.WriteLine(ConsoleMsg);
                 }
 
 
@@ -149,7 +179,77 @@ namespace MailConsole
             {
                 //Console.WriteLine(ex.ToString() + "\n" + ex.InnerException);
 
-                throw ex;
+                errorlogs.SendErrorToText(ex);
+            }
+
+
+        }
+
+        public void AddStoreToMailerQueue()
+        {
+            try
+            {
+                #region get Mailer List
+
+                Global global = new Global(_Connectionstring);
+
+                MailerList = Global.RetrieveFromStoreDB();
+
+                if (MailerList.Count > 0)
+                {
+                    for (int i = 0; i < MailerList.Count; i++)
+                    {
+                        if (MailerList[i]._Smtp != null)
+                        {
+                            if (MailerList[i]._ToEmail != null)
+                            {
+                                isMailsent = Global.SendEmail(MailerList[i]._Smtp, MailerList[i]._ToEmail, MailerList[i]._TikcketMailSubject, MailerList[i]._TicketMailBody,
+                                string.IsNullOrEmpty(MailerList[i]._UserCC) ? null : MailerList[i]._UserCC.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries),
+                                string.IsNullOrEmpty(MailerList[i]._UserBCC) ? null : MailerList[i]._UserBCC.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries),
+                                MailerList[i]._TenantID);
+
+                                if (isMailsent)
+                                {
+                                    successcount++;
+                                    MailSuccessList.Add(MailerList[i]._MailID);
+                                }
+                                else
+                                {
+                                    failcount++;
+
+                                }
+                            }
+                            else
+                            {
+                                failcount++;
+                            }
+                        }
+                        else
+                        {
+                            smtperrorcount++;
+                        }
+                    }
+
+                    if (MailSuccessList.Count > 0)
+                    {
+                        updatecount = Global.UpdateStoreMailerQue(string.Join(",", MailSuccessList));
+                    }
+
+                    ConsoleMsg += "Mail sent SuccesFully for " + successcount + " records \n";
+                    ConsoleMsg += "Mail Failed for " + failcount + " records \n";
+                    ConsoleMsg += "Mail Failed due to SMTP error for " + smtperrorcount + " records \n";
+
+                    // Console.WriteLine(ConsoleMsg);
+                }
+
+
+                #endregion
+            }
+            catch (Exception ex)
+            {
+                //Console.WriteLine(ex.ToString() + "\n" + ex.InnerException);
+
+                errorlogs.SendErrorToText(ex);
             }
 
 
@@ -157,7 +257,7 @@ namespace MailConsole
 
         public void CreateTicket()
         {
-            TicketThruMail fm = new TicketThruMail(_Connectionstring, _CustomerKeyword,_TicketKeyword);
+            TicketThruMail fm = new TicketThruMail(_Connectionstring, _CustomerKeyword, _TicketKeyword);
             List<TenantMailDetailsModel> tenantDetails = new List<TenantMailDetailsModel>();
             int CustomerID = 0; int TicketID = 0; ; int ticketcount = 0;
             ConsoleMsg = string.Empty;
@@ -300,10 +400,40 @@ namespace MailConsole
             }
             catch (Exception ex)
             {
+                //SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex);
                 ConsoleMsg = ex.ToString() + "\n" + ex.InnerException;
             }
-            Console.WriteLine(ConsoleMsg);
+            // Console.WriteLine(ConsoleMsg);
 
+        }
+
+
+        public MySettingsConfigMoal GetConfigDetails()
+        {
+            MySettingsConfigMoal MySettingsConfigMoal = new MySettingsConfigMoal();
+
+            try
+            {
+                var builder = new ConfigurationBuilder()
+              .SetBasePath(Directory.GetCurrentDirectory())
+              .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+              .AddUserSecrets<Program>()
+              .AddEnvironmentVariables();
+
+                IConfigurationRoot configuration = builder.Build();
+                var mySettingsConfig = new MySettingsConfig();
+                configuration.GetSection("MySettings").Bind(mySettingsConfig);
+
+                MySettingsConfigMoal.Connectionstring = configuration.GetConnectionString("DefaultConnection");
+
+            }
+            catch (Exception ex)
+            {
+                // Console.WriteLine("Error getting data from appsetting.json");
+            }
+
+            return MySettingsConfigMoal;
         }
     }
 }

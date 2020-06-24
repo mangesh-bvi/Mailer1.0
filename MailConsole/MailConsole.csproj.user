@@ -1,6 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
-    <_LastSelectedProfileId>D:\Devesh\Devesh\Ticketing\DotNetCore Console\mailconsole\MailConsole\MailConsole\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
+    <_LastSelectedProfileId>D:\Devesh\Devesh\Ticketing\DotNetCore Console\Ticketing Service\Ticketing Service\Mailer1.0\MailConsole\Properties\PublishProfiles\FolderProfile.pubxml</_LastSelectedProfileId>
+    <ShowAllFiles>false</ShowAllFiles>
   </PropertyGroup>
 </Project>

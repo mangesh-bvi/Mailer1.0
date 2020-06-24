@@ -19,6 +19,7 @@ namespace MailerConsole
 
         public static MySqlDataAdapter sda = new MySqlDataAdapter();
 
+        ErrorLogs errorlogs = new ErrorLogs();
         public Global(string Connectionstring)
         {
             conn = new MySqlConnection(Connectionstring);
@@ -33,7 +34,7 @@ namespace MailerConsole
             DataSet Mailerds = new DataSet();
             List<TicketingMailerModel> MailerList = new List<TicketingMailerModel>();
             MySqlCommand cmd = new MySqlCommand();
-
+            ErrorLogs errorlog = new ErrorLogs();
             try
             {
                 //_connectionstring = System.Configuration.ConfigurationManager.ConnectionStrings["conn"].ConnectionString;
@@ -91,7 +92,82 @@ namespace MailerConsole
             }
             catch(Exception ex)
             {
-                throw ex;
+                errorlog.SendErrorToText(ex);
+            }
+            finally
+            {
+                if (conn != null)
+                    conn.Close();
+                if (Mailerds != null)
+                    Mailerds.Dispose();
+            }
+            return MailerList;
+        }
+
+        public static List<TicketingMailerModel> RetrieveFromStoreDB()
+        {
+            DataSet Mailerds = new DataSet();
+            List<TicketingMailerModel> MailerList = new List<TicketingMailerModel>();
+            MySqlCommand cmd = new MySqlCommand();
+            ErrorLogs errorlog = new ErrorLogs();
+            try
+            {
+                //_connectionstring = System.Configuration.ConfigurationManager.ConnectionStrings["conn"].ConnectionString;
+
+                if (conn != null && conn.State == ConnectionState.Closed)
+                {
+                    conn.Open();
+                }
+
+                cmd.Connection = conn;
+                MySqlCommand cmd1 = new MySqlCommand("SP_GetStoreMailerDetails", conn);
+                cmd1.CommandType = CommandType.StoredProcedure;
+                sda.SelectCommand = cmd1;
+                sda.Fill(Mailerds);
+
+                if (Mailerds != null && Mailerds.Tables[0] != null)
+                {
+                    if (Mailerds.Tables[0].Rows.Count > 0)
+                    {
+                        foreach (DataRow dr in Mailerds.Tables[0].Rows)
+                        {
+                            try
+                            {
+                                TicketingMailerModel obj = new TicketingMailerModel();
+
+                                obj._MailID = dr["MailID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["MailID"]);
+                                obj._TicketID = dr["TicketID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TicketID"]);
+                                obj._TenantID = dr["TenantID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TenantID"]);
+                                obj._AlertID = dr["AlertID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["AlertID"]);
+                                obj._TikcketMailSubject = dr["TikcketMailSubject"] == DBNull.Value ? string.Empty : Convert.ToString(dr["TikcketMailSubject"]);
+                                obj._TicketMailBody = dr["TicketMailBody"] == DBNull.Value ? string.Empty : Convert.ToString(dr["TicketMailBody"]);
+                                obj._TicketSource = dr["TicketSource"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TicketSource"]);
+                                obj._ToEmail = dr["ToEmail"] == DBNull.Value ? string.Empty : Convert.ToString(dr["ToEmail"]);
+                                obj._UserCC = dr["UserCC"] == DBNull.Value ? string.Empty : Convert.ToString(dr["UserCC"]);
+                                obj._UserBCC = dr["UserBCC"] == DBNull.Value ? string.Empty : Convert.ToString(dr["UserBCC"]);
+                                obj._IsSent = dr["IsSent"] == DBNull.Value ? 0 : Convert.ToInt32(dr["IsSent"]);
+                                obj._PriorityID = dr["PriorityID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["PriorityID"]);
+                                obj._Smtp = GetSMTPDetails(dr["TenantID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TenantID"]));
+
+
+                                MailerList.Add(obj);
+                            }
+                            catch (Exception ex)
+                            {
+                                throw ex;
+                            }
+
+
+
+                        }
+
+                    }
+                }
+
+            }
+            catch (Exception ex)
+            {
+                errorlog.SendErrorToText(ex);
             }
             finally
             {
@@ -111,6 +187,7 @@ namespace MailerConsole
         {
             double updatecount = 0;
             MySqlCommand cmd = new MySqlCommand();
+            ErrorLogs errorlog = new ErrorLogs();
             try
             {
                 if (!string.IsNullOrEmpty(MailIds))
@@ -130,7 +207,42 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw ex;
+                errorlog.SendErrorToText(ex);
+            }
+            finally
+            {
+                if (conn != null)
+                    conn.Close();
+            }
+
+            return updatecount;
+        }
+
+        public static double UpdateStoreMailerQue(string MailIds)
+        {
+            double updatecount = 0;
+            MySqlCommand cmd = new MySqlCommand();
+            ErrorLogs errorlog = new ErrorLogs();
+            try
+            {
+                if (!string.IsNullOrEmpty(MailIds))
+                {
+                    if (conn != null && conn.State == ConnectionState.Closed)
+                    {
+                        conn.Open();
+                    }
+                    cmd.Connection = conn;
+                    MySqlCommand cmd1 = new MySqlCommand("SP_UpdateStoreMailerDetails", conn);
+                    cmd1.Parameters.AddWithValue("_MailId", MailIds);
+                    cmd1.CommandType = CommandType.StoredProcedure;
+                    updatecount = cmd1.ExecuteNonQuery();
+
+                }
+
+            }
+            catch (Exception ex)
+            {
+                errorlog.SendErrorToText(ex);
             }
             finally
             {
@@ -147,7 +259,7 @@ namespace MailerConsole
         {
             DataSet ds = new DataSet();
             SMTPDetails sMTPDetails = new SMTPDetails();
-
+            ErrorLogs errorlog = new ErrorLogs();
             try
             {
                 MySqlCommand cmd = new MySqlCommand();
@@ -172,11 +284,12 @@ namespace MailerConsole
                     sMTPDetails.Password = Convert.ToString(ds.Tables[0].Rows[0]["EmailPassword"]);
                     sMTPDetails.SMTPHost = Convert.ToString(ds.Tables[0].Rows[0]["SMTPHost"]);
                     sMTPDetails.SMTPServer = Convert.ToString(ds.Tables[0].Rows[0]["SMTPHost"]);
+                    sMTPDetails.EmailSenderName = Convert.ToString(ds.Tables[0].Rows[0]["EmailSenderName"]);
                 }
             }
             catch (Exception ex)
             {
-                throw ex;
+                errorlog.SendErrorToText(ex);
             }
             finally
             {
@@ -193,6 +306,7 @@ namespace MailerConsole
         public static bool SendEmail(SMTPDetails smtpDetails, string emailToAddress, string subject, string body, string[] cc = null, string[] bcc = null, int tenantId = 0)
         {
             bool isMailSent = false;
+            ErrorLogs errorlog = new ErrorLogs();
             try
             {
           
@@ -204,8 +318,8 @@ namespace MailerConsole
                 {
                     using (MailMessage message = new MailMessage())
                     {
-                        message.From = new MailAddress(smtpDetails.FromEmailId, "EasyRewardz");
-
+                        //message.From = new MailAddress(smtpDetails.FromEmailId, "EasyRewardz");
+                        message.From = new MailAddress(smtpDetails.FromEmailId, smtpDetails.EmailSenderName);
                         if (cc != null)
                         {
                             if (cc.Length > 0)
@@ -242,7 +356,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                throw ex;
+                errorlog.SendErrorToText(ex);
             }
             return isMailSent;
         }

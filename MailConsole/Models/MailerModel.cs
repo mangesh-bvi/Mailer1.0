@@ -63,5 +63,10 @@ namespace MailerConsole
         /// SMTP Host
         /// </summary>
         public string SMTPHost { get; set; }
+
+        /// <summary>
+        /// Email Sender Name
+        /// </summary>
+        public string EmailSenderName { get; set; }
     }
 }
