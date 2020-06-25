@@ -1,5 +1,6 @@
 ﻿using MailerConsole;
 using Microsoft.Extensions.Configuration;
+using MySql.Data.MySqlClient;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -12,8 +13,8 @@ namespace MailConsole
     class Program
     {
         private static string _Connectionstring;
-        public static string[] _CustomerKeyword = null;// System.Configuration.ConfigurationManager.AppSettings["customerkeyword"].Split(new char [] { ','},StringSplitOptions.RemoveEmptyEntries);
-        public static string[] _TicketKeyword = null;  // System.Configuration.ConfigurationManager.AppSettings["ticketkeyword"].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+        public static string[] _CustomerKeyword = null;
+        public static string[] _TicketKeyword = null;  
         ErrorLogs errorlogs = new ErrorLogs();
         #region variables
 
@@ -25,10 +26,17 @@ namespace MailConsole
         bool isMailsent = false;
 
         DataTable dtMail = new DataTable();
-
         #endregion
-
+        
         static void Main(string[] args)
+        {
+
+            Program obj = new Program();
+            obj.StartProcess();
+        }
+
+
+        public void StartProcess()
         {
             Program obj = new Program();
             try
@@ -43,41 +51,32 @@ namespace MailConsole
                 var mySettingsConfig = new MySettingsConfig();
                 configuration.GetSection("MySettings").Bind(mySettingsConfig);
 
-                _Connectionstring = configuration.GetConnectionString("DefaultConnection");
+               
                 string interval = mySettingsConfig.IntervalInMinutes;
 
                 _CustomerKeyword = mySettingsConfig.Customerkeyword.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                 _TicketKeyword = mySettingsConfig.Ticketkeyword.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
-                obj.CreateTicket();
-                //obj.AddToMailerQueue();
-                double intervalInMinutes = Convert.ToDouble(interval);// 60 * 5000; // milliseconds to one min
-
-
-                //obj.CreateTicket();
-                //obj.AddToMailerQueue();
-
-                Thread _Individualprocessthread = new Thread(new ThreadStart(obj.CallEveryMin));
+               
+                double intervalInMinutes = Convert.ToDouble(interval);
+               
+                Thread _Individualprocessthread = new Thread(new ThreadStart(InvokeMethod));
                 _Individualprocessthread.Start();
 
-                //Timer checkForTime = new Timer(intervalInMinutes);
-                //checkForTime.Elapsed += new ElapsedEventHandler(obj.CallEveryMin);
-                //checkForTime.Enabled = true;
-
-                //obj.CallEveryMin();
+               
             }
             catch (Exception ex)
             {
 
-                //Console.WriteLine(ex.ToString() + "\n" + ex.InnerException);
+               
             }
 
 
 
-            // Console.ReadLine();
+           
         }
 
 
-        public void CallEveryMin()
+        public void InvokeMethod()
         {
             var builder = new ConfigurationBuilder()
                .SetBasePath(Directory.GetCurrentDirectory())
@@ -89,46 +88,46 @@ namespace MailConsole
             var mySettingsConfig = new MySettingsConfig();
             configuration.GetSection("MySettings").Bind(mySettingsConfig);
 
-            _Connectionstring = configuration.GetConnectionString("DefaultConnection");
             string interval = mySettingsConfig.IntervalInMinutes;
 
+            int intervalInMinutes = Convert.ToInt32(interval);
 
             while (true)
             {
-                CreateTicket();
-                AddToMailerQueue();
-                AddStoreToMailerQueue();
-                Thread.Sleep(Convert.ToInt32(interval));
+                GetConnectionStrings();
+
+                Thread.Sleep(intervalInMinutes);
             }
         }
 
 
-        //public void CallEveryMin(object sender, ElapsedEventArgs e)
-        //// public void CallEveryMin()
-        //{
-        //    try
-        //    {
-        //        Task.Factory.StartNew(CreateTicket);
-        //        Task.Factory.StartNew(AddToMailerQueue);
+        public void CallEveryMin(string ConStrings)
+        {
+            var builder = new ConfigurationBuilder()
+               .SetBasePath(Directory.GetCurrentDirectory())
+               .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+               .AddUserSecrets<Program>()
+               .AddEnvironmentVariables();
 
-        //        // CreateTicket();
-        //        //AddToMailerQueue();
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        throw ex;
-        //    }
-        //}
+            IConfigurationRoot configuration = builder.Build();
+            var mySettingsConfig = new MySettingsConfig();
+            configuration.GetSection("MySettings").Bind(mySettingsConfig);
+            string interval = mySettingsConfig.IntervalInMinutes;
+            CreateTicket(ConStrings);
+            AddToMailerQueue(ConStrings);
+            AddStoreToMailerQueue(ConStrings);
+               
+        }
 
-        public void AddToMailerQueue()
+        public  void AddToMailerQueue(string ConStrings)
         {
             try
             {
                 #region get Mailer List
 
-                Global global = new Global(_Connectionstring);
+                Global global = new Global(ConStrings);
 
-                MailerList = Global.RetrieveFromDB();
+                MailerList = Global.RetrieveFromDB(ConStrings);
 
                 if (MailerList.Count > 0)
                 {
@@ -140,7 +139,7 @@ namespace MailConsole
                             isMailsent = Global.SendEmail(MailerList[i]._Smtp, MailerList[i]._ToEmail, MailerList[i]._TikcketMailSubject, MailerList[i]._TicketMailBody,
                                 string.IsNullOrEmpty(MailerList[i]._UserCC) ? null : MailerList[i]._UserCC.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries),
                                 string.IsNullOrEmpty(MailerList[i]._UserBCC) ? null : MailerList[i]._UserBCC.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries),
-                                MailerList[i]._TenantID);
+                                MailerList[i]._TenantID, ConStrings);
 
                             if (isMailsent)
                             {
@@ -162,14 +161,14 @@ namespace MailConsole
 
                     if (MailSuccessList.Count > 0)
                     {
-                        updatecount = Global.UpdateMailerQue(string.Join(",", MailSuccessList));
+                        updatecount = Global.UpdateMailerQue(string.Join(",", MailSuccessList), ConStrings);
                     }
 
                     ConsoleMsg += "Mail sent SuccesFully for " + successcount + " records \n";
                     ConsoleMsg += "Mail Failed for " + failcount + " records \n";
                     ConsoleMsg += "Mail Failed due to SMTP error for " + smtperrorcount + " records \n";
 
-                    // Console.WriteLine(ConsoleMsg);
+                    
                 }
 
 
@@ -177,23 +176,21 @@ namespace MailConsole
             }
             catch (Exception ex)
             {
-                //Console.WriteLine(ex.ToString() + "\n" + ex.InnerException);
-
-                errorlogs.SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex,ConStrings);
             }
 
 
         }
 
-        public void AddStoreToMailerQueue()
+        public void AddStoreToMailerQueue(string ConStrings)
         {
             try
             {
                 #region get Mailer List
 
-                Global global = new Global(_Connectionstring);
+                Global global = new Global(ConStrings);
 
-                MailerList = Global.RetrieveFromStoreDB();
+                MailerList = Global.RetrieveFromStoreDB(ConStrings);
 
                 if (MailerList.Count > 0)
                 {
@@ -232,14 +229,14 @@ namespace MailConsole
 
                     if (MailSuccessList.Count > 0)
                     {
-                        updatecount = Global.UpdateStoreMailerQue(string.Join(",", MailSuccessList));
+                        updatecount = Global.UpdateStoreMailerQue(string.Join(",", MailSuccessList), ConStrings);
                     }
 
                     ConsoleMsg += "Mail sent SuccesFully for " + successcount + " records \n";
                     ConsoleMsg += "Mail Failed for " + failcount + " records \n";
                     ConsoleMsg += "Mail Failed due to SMTP error for " + smtperrorcount + " records \n";
 
-                    // Console.WriteLine(ConsoleMsg);
+                    
                 }
 
 
@@ -247,23 +244,21 @@ namespace MailConsole
             }
             catch (Exception ex)
             {
-                //Console.WriteLine(ex.ToString() + "\n" + ex.InnerException);
-
-                errorlogs.SendErrorToText(ex);
+                 errorlogs.SendErrorToText(ex,ConStrings);
             }
 
 
         }
 
-        public void CreateTicket()
+        public void CreateTicket(string ConStrings)
         {
-            TicketThruMail fm = new TicketThruMail(_Connectionstring, _CustomerKeyword, _TicketKeyword);
+            TicketThruMail fm = new TicketThruMail(ConStrings, _CustomerKeyword, _TicketKeyword);
             List<TenantMailDetailsModel> tenantDetails = new List<TenantMailDetailsModel>();
             int CustomerID = 0; int TicketID = 0; ; int ticketcount = 0;
             ConsoleMsg = string.Empty;
             try
             {
-                tenantDetails = fm.GetTenantMailConfig();
+                tenantDetails = fm.GetTenantMailConfig(ConStrings);
 
                 if (tenantDetails != null && tenantDetails.Count > 0)
                 {
@@ -276,7 +271,7 @@ namespace MailConsole
                         {
 
                             DataTable dtMail = new DataTable();
-                            dtMail = fm.getEmail(tenantDetails[i]);
+                            dtMail = fm.getEmail(tenantDetails[i], ConStrings);
 
                             if (dtMail != null && dtMail.Rows.Count > 0)
                             {
@@ -293,18 +288,18 @@ namespace MailConsole
                                     #region Read CustomerID from MailBody
                                     if (!emailID.Contains("facebook") && !emailID.Contains("googlemail"))
                                     {
-                                        CustomerID = fm.GetIDFromEmailBody(emailbody, "customer");
+                                        CustomerID = fm.GetIDFromEmailBody(emailbody, "customer", ConStrings);
 
                                         #endregion
 
-                                        CustomerID = fm.IsCustomerExists(tenantDetails[i].TenantID, emailID, CustomerID, CustomerName);
+                                        CustomerID = fm.IsCustomerExists(tenantDetails[i].TenantID, emailID, CustomerID, CustomerName, ConStrings);
 
                                         if (CustomerID > 0)
                                         {
                                             #region Read TicketID from MailBody
 
-                                            //TicketID = fm.GetIDFromEmailBody(emailbody, "ticket");
-                                            TicketID = fm.GetIDFromEmailBody(emailsubject, "ticket");
+                                           
+                                            TicketID = fm.GetIDFromEmailBody(emailsubject, "ticket", ConStrings);
 
                                             if (TicketID == 0)
                                             {
@@ -364,13 +359,13 @@ namespace MailConsole
                                                     }
                                                 }
 
-                                                //emailbody = Regex.Replace(emailbody, "<.*?>", String.Empty);
+                                               
                                                 emailbody = Regex.Replace(emailbody, @"<(?!br[\x20/>])[^<>]+>", String.Empty);
 
                                             }
                                             #endregion
 
-                                            ticketcount += fm.CreateTicket(tenantDetails[i].TenantID, CustomerID, TicketID, emailID, emailsubject, emailbody, attachment);
+                                            ticketcount += fm.CreateTicket(tenantDetails[i].TenantID, CustomerID, TicketID, emailID, emailsubject, emailbody, attachment, ConStrings);
                                         }
                                     }
 
@@ -400,11 +395,11 @@ namespace MailConsole
             }
             catch (Exception ex)
             {
-                //SendErrorToText(ex);
-                errorlogs.SendErrorToText(ex);
+               
+                errorlogs.SendErrorToText(ex, ConStrings);
                 ConsoleMsg = ex.ToString() + "\n" + ex.InnerException;
             }
-            // Console.WriteLine(ConsoleMsg);
+            
 
         }
 
@@ -425,15 +420,68 @@ namespace MailConsole
                 var mySettingsConfig = new MySettingsConfig();
                 configuration.GetSection("MySettings").Bind(mySettingsConfig);
 
+                
+
                 MySettingsConfigMoal.Connectionstring = configuration.GetConnectionString("DefaultConnection");
 
             }
             catch (Exception ex)
             {
-                // Console.WriteLine("Error getting data from appsetting.json");
+               
             }
 
             return MySettingsConfigMoal;
+        }  
+
+
+        public  void  GetConnectionStrings()
+        {
+            string ServerName = string.Empty;
+            string ServerCredentailsUsername = string.Empty;
+            string ServerCredentailsPassword = string.Empty;
+            string DBConnection = string.Empty;
+
+
+            try
+            {
+                DataTable dt = new DataTable();
+                IConfiguration config = new ConfigurationBuilder().AddJsonFile("appsettings.json", true, true).Build();
+                var constr = config.GetSection("ConnectionStrings").GetSection("DefaultConnection").Value;
+                MySqlConnection con = new MySqlConnection(constr);
+                MySqlCommand cmd = new MySqlCommand("SP_HSGetAllConnectionstrings", con);
+                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+                cmd.Connection.Open();
+                MySqlDataAdapter da = new MySqlDataAdapter(cmd);
+                da.Fill(dt);
+                cmd.Connection.Close();
+
+                if (dt.Rows.Count > 0)
+                {
+                    for (int i = 0; i < dt.Rows.Count; i++)
+                    {
+                        DataRow dr = dt.Rows[i];
+                        ServerName = Convert.ToString(dr["ServerName"]);
+                        ServerCredentailsUsername = Convert.ToString(dr["ServerCredentailsUsername"]);
+                        ServerCredentailsPassword = Convert.ToString(dr["ServerCredentailsPassword"]);
+                        DBConnection = Convert.ToString(dr["DBConnection"]);
+
+                        string ConString = "Data Source = " + ServerName + " ; port = " + 3306 + "; Initial Catalog = " + DBConnection + " ; User Id = " + ServerCredentailsUsername + "; password = " + ServerCredentailsPassword + "";
+                        CallEveryMin(ConString);
+                    }
+                }
+            }
+            catch(Exception ex)
+            {
+
+
+            }
+            finally
+            {
+
+                GC.Collect();
+            }
+
+
         }
     }
 }

@@ -11,29 +11,20 @@ using OpenPop.Mime;
 using OpenPop.Pop3;
 using OpenPop.Mime.Decode;
 using MySql.Data.MySqlClient;
+using Microsoft.Extensions.Configuration;
 
 namespace MailerConsole
 {
     public class TicketThruMail
 
-    {  //string strHostName = "servername", strUserName = "username", strPassword = "userpassword";
-
-        //public static string _connectionstring = System.Configuration.ConfigurationManager.ConnectionStrings["conn"].ConnectionString;
-        //public static string _mailSubject = System.Configuration.ConfigurationManager.AppSettings["mailsubject"];
-        //public static string _mailBody = System.Configuration.ConfigurationManager.AppSettings["mailbody"];
-
-        //public static string[] _CustomerKeyword= System.Configuration.ConfigurationManager.AppSettings["customerkeyword"].Split(new char [] { ','},StringSplitOptions.RemoveEmptyEntries);
-        //public static string[] _TicketKeyword = System.Configuration.ConfigurationManager.AppSettings["ticketkeyword"].Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries);
+    {  
         Dictionary<string, string[]> dictKeyword = null;
         public static string strUserName = string.Empty;
-
         public static MySqlConnection conn = null;
         public static  MySqlCommand cmd = new MySqlCommand();
         public static MySqlDataAdapter sda = new MySqlDataAdapter();
-
         ErrorLogs errorlogs = new ErrorLogs();
-
-        public TicketThruMail(string Connectionstring, string[] CustomerKeyword, string[] TicketKeyword)
+        public  TicketThruMail(string Connectionstring, string[] CustomerKeyword, string[] TicketKeyword)
         {
             dictKeyword = new Dictionary<string, string[]>()
             {
@@ -46,32 +37,28 @@ namespace MailerConsole
 
         #region FETCH MAIL LIST
         //this is the mail function, it will connect to email server and will do all further process
-        public DataTable getEmail(TenantMailDetailsModel tenantMailConfig)
+        public DataTable getEmail(TenantMailDetailsModel tenantMailConfig,string ConStrings)
         {
-            //object of OpenPop.Pop3
+          
             Pop3Client objPOP3Client = new Pop3Client();
             object[] objMessageParts;
 
-            //string strHostName = "servername", strUserName = "username", strPassword = "userpassword";
-            //string strHostName = "pop.gmail.com", strUserName = "realtester2019@gmail.com", strPassword = "Brain@2019";
-
+            
             tenantMailConfig.SMTPHost = "pop.gmail.com";
             string strHostName = tenantMailConfig.SMTPHost,  strPassword = tenantMailConfig.EmailPassword;
             strUserName = tenantMailConfig.EmailSenderID;
-            int smtpPort = 995;// tenantMailConfig.SMTPPort;
+            int smtpPort = 995;
 
             int intTotalEmail;
             DataTable dtEmail = new DataTable();
 
             try
             {
-                //mail server connection
+                
                 if (objPOP3Client.Connected)
                     objPOP3Client.Disconnect();
 
-                ////conect to mail server
-                //objPOP3Client.Connect(strHostName, 995, true);
-                //conect to mail server
+               
                 objPOP3Client.Connect(strHostName, smtpPort, true);
 
                 //authenticate with server
@@ -80,8 +67,7 @@ namespace MailerConsole
                 //get total email counts
                 intTotalEmail = objPOP3Client.GetMessageCount();
 
-                //for gmail emails this settings are required to read emails
-                //AddMapping();
+               
 
                 //put all mail content in this data table, so get blank table structure
                 dtEmail = GetAllEmailStructure();
@@ -89,17 +75,17 @@ namespace MailerConsole
                 //go through all emails
                 for (int i = 1; i <= intTotalEmail; i++)
                 {
-                    objMessageParts = GetMessageContent(i, ref objPOP3Client);
+                    objMessageParts = GetMessageContent(i, ref objPOP3Client,ConStrings);
 
                     if (objMessageParts != null && objMessageParts[0].ToString() == "0")
                     {
-                        AddToDtEmail(objMessageParts, i, dtEmail);
+                        AddToDtEmail(objMessageParts, i, dtEmail, ConStrings);
                     }
                 }
             }
             catch (Exception ex)
             {
-                errorlogs.SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex,ConStrings);
             }
             finally
             {
@@ -110,7 +96,7 @@ namespace MailerConsole
         }
 
         //this function will add mapping-encoding especially for gmail email reading issue
-        public void AddMapping()
+        public void AddMapping(string ConStrings)
         {
             try
             {
@@ -118,7 +104,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlogs.SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex, ConStrings);
             }
             EncodingFinder.FallbackDecoder = CustomFallbackDecoder;
         }
@@ -136,7 +122,7 @@ namespace MailerConsole
         }
 
         //this function will get the message content by messageid
-        public object[] GetMessageContent(int intMessageNumber, ref Pop3Client objPOP3Client)
+        public object[] GetMessageContent(int intMessageNumber, ref Pop3Client objPOP3Client,string ConStrings)
         {
             object[] strArrMessage = new object[10];
             Message objMessage;
@@ -181,7 +167,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlogs.SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex, ConStrings);
             }
             return strArrMessage;
         }
@@ -213,7 +199,7 @@ namespace MailerConsole
         }
 
         //this function will add one mail item (object) into mail's data table
-        public void AddToDtEmail(object[] objMessageParts, int intRow, DataTable dtEmail)
+        public void AddToDtEmail(object[] objMessageParts, int intRow, DataTable dtEmail,string ConStrings)
         {
             DataRow dr;
 
@@ -249,7 +235,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlogs.SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex,ConStrings);
             }
         }
 
@@ -257,13 +243,14 @@ namespace MailerConsole
 
         #region GET TENANT DETAILS
 
-        public List<TenantMailDetailsModel> GetTenantMailConfig()
+        public List<TenantMailDetailsModel> GetTenantMailConfig(string ConStrings)
         {
             DataSet ds = new DataSet();
             List<TenantMailDetailsModel> tenantDetails = new List<TenantMailDetailsModel>();
 
             try
             {
+                MySqlConnection conn = new MySqlConnection(ConStrings);
                 MySqlCommand cmd = new MySqlCommand();
 
                 if (conn != null && conn.State == ConnectionState.Closed)
@@ -305,7 +292,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlogs.SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex,ConStrings);
             }
             finally
             {
@@ -321,7 +308,7 @@ namespace MailerConsole
 
         #region Get CustomerID/TicketID from the Email body
 
-        public int GetIDFromEmailBody(string EmailBody, string searchfor)
+        public int GetIDFromEmailBody(string EmailBody, string searchfor,string ConStrings)
         {
             int RetrivedID = 0; string strRetreivedID = string.Empty;
             EmailBody = EmailBody.ToLower();
@@ -356,7 +343,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlogs.SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex,ConStrings);
             }
 
             return RetrivedID;
@@ -371,13 +358,13 @@ namespace MailerConsole
         /// check if customer exists: if yes then return cust ID else create new customer and return new cust ID
         /// </summary>
         /// 
-        public int IsCustomerExists(int tenantId, string EmailID,int CustomerId,string CustomerName)
+        public int IsCustomerExists(int tenantId, string EmailID,int CustomerId,string CustomerName,string ConStrings)
         {
             DataSet ds = new DataSet();
             int CustomerID = 0;
             try
             {
-
+                MySqlConnection conn = new MySqlConnection(ConStrings);
 
                 if (conn != null && conn.State == ConnectionState.Closed)
                 {
@@ -404,7 +391,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlogs.SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex, ConStrings);
             }
             finally
             {
@@ -421,13 +408,14 @@ namespace MailerConsole
 
         #region CREATE TICKET BASED ON CUSTOMERID
 
-        public int CreateTicket(int TenantId,int Customerid,int TicketId,string EmailID, string MailSubject, string MailDescription,string Attachment)
+        public int CreateTicket(int TenantId,int Customerid,int TicketId,string EmailID, string MailSubject, string MailDescription,string Attachment,string ConStrings)
         {
             int TicketID = 0; short isfalse = 0; short istrue = 1;
             int TicketCreationCount = 0;
 
             try
             {
+                MySqlConnection conn = new MySqlConnection(ConStrings);
                 if (conn != null && conn.State == ConnectionState.Closed)
                 {
                     conn.Open();
@@ -514,7 +502,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlogs.SendErrorToText(ex);
+                errorlogs.SendErrorToText(ex,ConStrings);
             }
             finally
             {

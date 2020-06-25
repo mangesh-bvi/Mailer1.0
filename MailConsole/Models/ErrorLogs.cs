@@ -32,7 +32,7 @@ namespace MailerConsole
 
         #region Exception
 
-        public void SendErrorToText(Exception ex)
+        public void SendErrorToText(Exception ex,string ConStrings)
         {
             String ErrorlineNo, Errormsg, extype, ErrorLocation;
 
@@ -58,7 +58,7 @@ namespace MailerConsole
                     IPAddress = ""
                 };
 
-                InsertErrorLog(errorLogs);
+                InsertErrorLog(errorLogs,ConStrings);
 
             }
             catch (Exception e)
@@ -67,7 +67,7 @@ namespace MailerConsole
             }
         }
 
-        public void FileText(string Text)
+        public void FileText(string Text, string ConStrings)
         {
 
             var line = Environment.NewLine + Environment.NewLine;
@@ -87,7 +87,7 @@ namespace MailerConsole
 
                 //if (mysettingsconfigmoal.IsWriteLog == "1")
                 {
-                    InsertErrorLog(errorLogs);
+                    InsertErrorLog(errorLogs, ConStrings);
                 }
             }
             catch (Exception e)
@@ -96,12 +96,12 @@ namespace MailerConsole
             }
         }
 
-        public int InsertErrorLog(ErrorLogs errorLog)
+        public int InsertErrorLog(ErrorLogs errorLog,string ConStrings)
         {
             int Success = 0;
             try
             {
-
+                MySqlConnection conn = new MySqlConnection(ConStrings);
                 conn.Open();
                 MySqlCommand cmd = new MySqlCommand("SP_ErrorLog", conn);
                 cmd.Connection = conn;

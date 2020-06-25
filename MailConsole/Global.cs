@@ -24,21 +24,18 @@ namespace MailerConsole
         {
             conn = new MySqlConnection(Connectionstring);
         }
-
-
         #region CONSOLE MAILER 
 
         #region GetMailer List
-        public static List<TicketingMailerModel> RetrieveFromDB()
+        public static List<TicketingMailerModel> RetrieveFromDB(string ConStrings)
         {
             DataSet Mailerds = new DataSet();
             List<TicketingMailerModel> MailerList = new List<TicketingMailerModel>();
+            MySqlConnection conn = new MySqlConnection(ConStrings);
             MySqlCommand cmd = new MySqlCommand();
             ErrorLogs errorlog = new ErrorLogs();
             try
             {
-                //_connectionstring = System.Configuration.ConfigurationManager.ConnectionStrings["conn"].ConnectionString;
-                
                 if (conn != null && conn.State == ConnectionState.Closed)
                 {
                     conn.Open();
@@ -72,7 +69,7 @@ namespace MailerConsole
                                 obj._UserBCC = dr["UserBCC"] == DBNull.Value ? string.Empty : Convert.ToString(dr["UserBCC"]);
                                 obj._IsSent = dr["IsSent"] == DBNull.Value ? 0 : Convert.ToInt32(dr["IsSent"]);
                                 obj._PriorityID = dr["PriorityID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["PriorityID"]);
-                                obj._Smtp = GetSMTPDetails(dr["TenantID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TenantID"]));
+                                obj._Smtp = GetSMTPDetails(dr["TenantID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TenantID"]), ConStrings);
                                 
 
                                 MailerList.Add(obj);
@@ -81,18 +78,14 @@ namespace MailerConsole
                             {
                                 throw ex;
                             }
-                            
-
-                            
                         }
-                               
                     }
                 }
 
             }
             catch(Exception ex)
             {
-                errorlog.SendErrorToText(ex);
+                errorlog.SendErrorToText(ex,ConStrings);
             }
             finally
             {
@@ -104,7 +97,7 @@ namespace MailerConsole
             return MailerList;
         }
 
-        public static List<TicketingMailerModel> RetrieveFromStoreDB()
+        public static List<TicketingMailerModel> RetrieveFromStoreDB(string ConStrings)
         {
             DataSet Mailerds = new DataSet();
             List<TicketingMailerModel> MailerList = new List<TicketingMailerModel>();
@@ -112,7 +105,7 @@ namespace MailerConsole
             ErrorLogs errorlog = new ErrorLogs();
             try
             {
-                //_connectionstring = System.Configuration.ConfigurationManager.ConnectionStrings["conn"].ConnectionString;
+                
 
                 if (conn != null && conn.State == ConnectionState.Closed)
                 {
@@ -147,7 +140,7 @@ namespace MailerConsole
                                 obj._UserBCC = dr["UserBCC"] == DBNull.Value ? string.Empty : Convert.ToString(dr["UserBCC"]);
                                 obj._IsSent = dr["IsSent"] == DBNull.Value ? 0 : Convert.ToInt32(dr["IsSent"]);
                                 obj._PriorityID = dr["PriorityID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["PriorityID"]);
-                                obj._Smtp = GetSMTPDetails(dr["TenantID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TenantID"]));
+                                obj._Smtp = GetSMTPDetails(dr["TenantID"] == DBNull.Value ? 0 : Convert.ToInt32(dr["TenantID"]),ConStrings);
 
 
                                 MailerList.Add(obj);
@@ -157,8 +150,6 @@ namespace MailerConsole
                                 throw ex;
                             }
 
-
-
                         }
 
                     }
@@ -167,7 +158,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlog.SendErrorToText(ex);
+                errorlog.SendErrorToText(ex,ConStrings);
             }
             finally
             {
@@ -183,7 +174,7 @@ namespace MailerConsole
 
         #region UpdateMailerQue
 
-        public static double UpdateMailerQue(string MailIds)
+        public static double UpdateMailerQue(string MailIds,string ConStrings)
         {
             double updatecount = 0;
             MySqlCommand cmd = new MySqlCommand();
@@ -207,7 +198,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlog.SendErrorToText(ex);
+                errorlog.SendErrorToText(ex, ConStrings);
             }
             finally
             {
@@ -218,9 +209,10 @@ namespace MailerConsole
             return updatecount;
         }
 
-        public static double UpdateStoreMailerQue(string MailIds)
+        public static double UpdateStoreMailerQue(string MailIds,string ConStrings)
         {
             double updatecount = 0;
+            MySqlConnection conn = new MySqlConnection(ConStrings);
             MySqlCommand cmd = new MySqlCommand();
             ErrorLogs errorlog = new ErrorLogs();
             try
@@ -242,7 +234,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlog.SendErrorToText(ex);
+                errorlog.SendErrorToText(ex,ConStrings);
             }
             finally
             {
@@ -255,7 +247,7 @@ namespace MailerConsole
         #endregion
 
         #region GetSMTPDetails
-        public static SMTPDetails GetSMTPDetails(int TenantID)
+        public static SMTPDetails GetSMTPDetails(int TenantID,string ConStrings)
         {
             DataSet ds = new DataSet();
             SMTPDetails sMTPDetails = new SMTPDetails();
@@ -289,7 +281,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlog.SendErrorToText(ex);
+                errorlog.SendErrorToText(ex, ConStrings);
             }
             finally
             {
@@ -303,7 +295,7 @@ namespace MailerConsole
         #endregion
 
         #region SendMail
-        public static bool SendEmail(SMTPDetails smtpDetails, string emailToAddress, string subject, string body, string[] cc = null, string[] bcc = null, int tenantId = 0)
+        public static bool SendEmail(SMTPDetails smtpDetails, string emailToAddress, string subject, string body, string[] cc = null, string[] bcc = null, int tenantId = 0,string ConStrings = null)
         {
             bool isMailSent = false;
             ErrorLogs errorlog = new ErrorLogs();
@@ -318,7 +310,7 @@ namespace MailerConsole
                 {
                     using (MailMessage message = new MailMessage())
                     {
-                        //message.From = new MailAddress(smtpDetails.FromEmailId, "EasyRewardz");
+                        
                         message.From = new MailAddress(smtpDetails.FromEmailId, smtpDetails.EmailSenderName);
                         if (cc != null)
                         {
@@ -356,7 +348,7 @@ namespace MailerConsole
             }
             catch (Exception ex)
             {
-                errorlog.SendErrorToText(ex);
+                errorlog.SendErrorToText(ex, ConStrings);
             }
             return isMailSent;
         }
@@ -365,8 +357,5 @@ namespace MailerConsole
         #endregion
 
         #endregion
-
-     
-
     }
 }
