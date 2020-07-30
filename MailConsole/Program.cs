@@ -127,7 +127,7 @@ namespace MailConsole
 
         public void AddToMailerQueue(string ConStrings)
         {
-            errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Mail Process Started");
+            //errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Mail Process Started");
             try
             {
                 #region get Mailer List
@@ -135,27 +135,27 @@ namespace MailConsole
                 Global global = new Global(ConStrings);
 
                 MailerList = Global.RetrieveFromDB(ConStrings);
-                errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Retrive DBConnection Started");
+                //errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Retrive DBConnection Started");
                 if (MailerList.Count > 0)
                 {
-                    errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Mail Count " + MailerList.Count);
+                    //errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Mail Count " + MailerList.Count);
                     for (int i = 0; i < MailerList.Count; i++)
                     {
                         try
                         {
-                            errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "In Loop 1 :" + i);
+                            //errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "In Loop 1 :" + i);
                             if (MailerList[i]._Smtp != null)
                             {
-                                errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "In Loop 2 :" + i);
+                                //errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "In Loop 2 :" + i);
 
                                 isMailsent = Global.SendEmail(MailerList[i]._Smtp, MailerList[i]._ToEmail, MailerList[i]._TikcketMailSubject, MailerList[i]._TicketMailBody,
                                     string.IsNullOrEmpty(MailerList[i]._UserCC) ? null : MailerList[i]._UserCC.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries),
                                     string.IsNullOrEmpty(MailerList[i]._UserBCC) ? null : MailerList[i]._UserBCC.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries),
                                     MailerList[i]._TenantID, ConStrings);
-                                errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "In Loop 3 :" + i);
+                                //errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "In Loop 3 :" + i);
                                 if (isMailsent)
                                 {
-                                    errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Mail Sent:" + isMailsent);
+                                    //errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Mail Sent:" + isMailsent);
                                     successcount++;
                                     MailSuccessList.Add(MailerList[i]._MailID);
                                 }
@@ -164,7 +164,7 @@ namespace MailConsole
                                     failcount++;
 
                                 }
-                                errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Mail Sending status Fail Cnt : " + failcount + "Success Cnt :" + successcount);
+                                //errorlogs.SendErrorToText(new NullReferenceException("Student object is null."), ConStrings, "Mail Sending status Fail Cnt : " + failcount + "Success Cnt :" + successcount);
                             }
                             else
                             {
@@ -181,14 +181,14 @@ namespace MailConsole
                     if (MailSuccessList.Count > 0)
                     {
                         updatecount = Global.UpdateMailerQue(string.Join(",", MailSuccessList), ConStrings);
-                        errorlogs.SendErrorToText(null, ConStrings, "Mailer count updated in DB");
+                        //errorlogs.SendErrorToText(null, ConStrings, "Mailer count updated in DB");
                     }
 
                     ConsoleMsg += "Mail sent SuccesFully for " + successcount + " records \n";
                     ConsoleMsg += "Mail Failed for " + failcount + " records \n";
                     ConsoleMsg += "Mail Failed due to SMTP error for " + smtperrorcount + " records \n";
 
-                    errorlogs.SendErrorToText(null, ConStrings, "Mailer Process complete");
+                    //errorlogs.SendErrorToText(null, ConStrings, "Mailer Process complete");
                 }
 
 
@@ -274,16 +274,16 @@ namespace MailConsole
 
         public void CreateTicket(string ConStrings)
         {
-            errorlogs.SendErrorToText(new NullReferenceException("Create Ticket Started"), ConStrings, "Create Ticket Started");
+            //errorlogs.SendErrorToText(new NullReferenceException("Create Ticket Started"), ConStrings, "Create Ticket Started");
             TicketThruMail fm = new TicketThruMail(ConStrings, _CustomerKeyword, _TicketKeyword);
             List<TenantMailDetailsModel> tenantDetails = new List<TenantMailDetailsModel>();
             int CustomerID = 0; int TicketID = 0; ; int ticketcount = 0;
             ConsoleMsg = string.Empty;
             try
             {
-                errorlogs.SendErrorToText(new NullReferenceException("Befor Constring "), ConStrings, "Befor Constring ");
+                //errorlogs.SendErrorToText(new NullReferenceException("Befor Constring "), ConStrings, "Befor Constring ");
                 tenantDetails = fm.GetTenantMailConfig(ConStrings);
-                errorlogs.SendErrorToText(new NullReferenceException("After Constring"), ConStrings, "After Ticket Started" + ConStrings);
+                //errorlogs.SendErrorToText(new NullReferenceException("After Constring"), ConStrings, "After Ticket Started" + ConStrings);
                 if (tenantDetails != null && tenantDetails.Count > 0)
                 {
                     for (int i = 0; i < tenantDetails.Count; i++)
@@ -299,7 +299,7 @@ namespace MailConsole
 
                             if (dtMail != null && dtMail.Rows.Count > 0)
                             {
-                                errorlogs.SendErrorToText(new NullReferenceException("Getting Data from DB" + ConStrings), ConStrings, "Getting Data from DB" + ConStrings);
+                                //errorlogs.SendErrorToText(new NullReferenceException("Getting Data from DB" + ConStrings), ConStrings, "Getting Data from DB" + ConStrings);
                                 for (int j = 0; j < dtMail.Rows.Count; j++)
                                 {
                                     string CustomerName = Convert.ToString(dtMail.Rows[j]["FromName"]);
@@ -318,11 +318,11 @@ namespace MailConsole
                                         #endregion
 
                                         CustomerID = fm.IsCustomerExists(tenantDetails[i].TenantID, emailID, CustomerID, CustomerName, ConStrings);
-                                        errorlogs.SendErrorToText(new NullReferenceException("Getting Data from DB" + dtMail.Rows.Count), ConStrings, "Getting Data from DB" + CustomerID);
+                                        //errorlogs.SendErrorToText(new NullReferenceException("Getting Data from DB" + dtMail.Rows.Count), ConStrings, "Getting Data from DB" + CustomerID);
 
                                         if (CustomerID > 0)
                                         {
-                                            errorlogs.SendErrorToText(new NullReferenceException("CustomerID > 0" + CustomerID), ConStrings, "CustomerID > 0" + CustomerID);
+                                            //errorlogs.SendErrorToText(new NullReferenceException("CustomerID > 0" + CustomerID), ConStrings, "CustomerID > 0" + CustomerID);
                                             #region Read TicketID from MailBody
 
 
@@ -415,7 +415,7 @@ namespace MailConsole
                         #endregion
 
                         ConsoleMsg += ticketcount + " tickets created/updated for tenantID " + tenantDetails[i].TenantID + "\n";
-                        errorlogs.SendErrorToText(new NullReferenceException("ticketcount"), ConStrings, "ticketcount" + ConsoleMsg);
+                        //errorlogs.SendErrorToText(new NullReferenceException("ticketcount"), ConStrings, "ticketcount" + ConsoleMsg);
                     }
 
                 }
@@ -502,7 +502,7 @@ namespace MailConsole
             catch (Exception ex)
             {
 
-                //errorlogs.SendErrorToText(ex, ConString);
+              //  errorlogs.SendErrorToText(ex, ConString);
             }
             finally
             {
