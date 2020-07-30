@@ -251,17 +251,15 @@ namespace MailerConsole
             try
             {
                 MySqlConnection conn = new MySqlConnection(ConStrings);
-                MySqlCommand cmd = new MySqlCommand();
 
                 if (conn != null && conn.State == ConnectionState.Closed)
                 {
                     conn.Open();
                 }
-                cmd.Connection = conn;
-                MySqlCommand cmd1 = new MySqlCommand("SP_GetTenantMailerDetails", conn);
-                cmd1.CommandType = CommandType.StoredProcedure;
+                MySqlCommand cmd = new MySqlCommand("SP_GetTenantMailerDetails", conn);
+                cmd.CommandType = CommandType.StoredProcedure;
                 MySqlDataAdapter da = new MySqlDataAdapter();
-                da.SelectCommand = cmd1;
+                da.SelectCommand = cmd;
                 da.Fill(ds);
                 if (ds != null && ds.Tables[0] != null)
                 {
@@ -420,8 +418,6 @@ namespace MailerConsole
                 {
                     conn.Open();
                 }
-
-                cmd.Connection = conn;
                 MySqlCommand cmd1 = new MySqlCommand("SP_ValidateTicketByCustomerID", conn);
                 cmd1.Parameters.AddWithValue("@_TicketID", TicketId);
                 cmd1.Parameters.AddWithValue("@_TenantID", TenantId);

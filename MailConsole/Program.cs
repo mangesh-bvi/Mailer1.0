@@ -105,16 +105,16 @@ namespace MailConsole
 
         public void CallEveryMin(string ConStrings)
         {
-            var builder = new ConfigurationBuilder()
-               .SetBasePath(Directory.GetCurrentDirectory())
-               .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
-               .AddUserSecrets<Program>()
-               .AddEnvironmentVariables();
+            //var builder = new ConfigurationBuilder()
+            //   .SetBasePath(Directory.GetCurrentDirectory())
+            //   .AddJsonFile("appsettings.json", optional: true, reloadOnChange: true)
+            //   .AddUserSecrets<Program>()
+            //   .AddEnvironmentVariables();
 
-            IConfigurationRoot configuration = builder.Build();
-            var mySettingsConfig = new MySettingsConfig();
-            configuration.GetSection("MySettings").Bind(mySettingsConfig);
-            string interval = mySettingsConfig.IntervalInMinutes;
+            //IConfigurationRoot configuration = builder.Build();
+            //var mySettingsConfig = new MySettingsConfig();
+            //configuration.GetSection("MySettings").Bind(mySettingsConfig);
+            //string interval = mySettingsConfig.IntervalInMinutes;
 
 
             CreateTicket(ConStrings);
@@ -302,13 +302,13 @@ namespace MailConsole
                                 //errorlogs.SendErrorToText(new NullReferenceException("Getting Data from DB" + ConStrings), ConStrings, "Getting Data from DB" + ConStrings);
                                 for (int j = 0; j < dtMail.Rows.Count; j++)
                                 {
-                                    string CustomerName = Convert.ToString(dtMail.Rows[j]["FromName"]);
-                                    string emailID = Convert.ToString(dtMail.Rows[j]["FromID"]);
-                                    string emailsubject = Convert.ToString(dtMail.Rows[j]["Subject"]);
-                                    string emailbody = Convert.ToString(dtMail.Rows[j]["Body"]);
-                                    string emailHTMLbody = Convert.ToString(dtMail.Rows[j]["HTML"]);
-                                    string attachment = Convert.ToString(dtMail.Rows[j]["FileName"]);
-                                    string MessageID = Convert.ToString(dtMail.Rows[j]["MessageID"]);
+                                    string CustomerName = dtMail.Rows[j]["FromName"] == DBNull.Value ? string.Empty : Convert.ToString(dtMail.Rows[j]["FromName"]);
+                                    string emailID = dtMail.Rows[j]["FromID"] == DBNull.Value ? string.Empty : Convert.ToString(dtMail.Rows[j]["FromID"]);
+                                    string emailsubject = dtMail.Rows[j]["Subject"] == DBNull.Value ? string.Empty : Convert.ToString(dtMail.Rows[j]["Subject"]);
+                                    string emailbody = dtMail.Rows[j]["Body"] == DBNull.Value ? string.Empty : Convert.ToString(dtMail.Rows[j]["Body"]);
+                                    string emailHTMLbody = dtMail.Rows[j]["HTML"] == DBNull.Value ? string.Empty : Convert.ToString(dtMail.Rows[j]["HTML"]);
+                                    string attachment = dtMail.Rows[j]["FileName"] == DBNull.Value ? string.Empty : Convert.ToString(dtMail.Rows[j]["FileName"]);
+                                    string MessageID = dtMail.Rows[j]["MessageID"] == DBNull.Value ? string.Empty : Convert.ToString(dtMail.Rows[j]["MessageID"]);
 
                                     #region Read CustomerID from MailBody
                                     if (!emailID.Contains("facebook") && !emailID.Contains("googlemail"))
