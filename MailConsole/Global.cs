@@ -178,6 +178,7 @@ namespace MailerConsole
         {
             double updatecount = 0;
             MySqlCommand cmd = new MySqlCommand();
+            MySqlConnection conn = new MySqlConnection(ConStrings);
             ErrorLogs errorlog = new ErrorLogs();
             try
             {

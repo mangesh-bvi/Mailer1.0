@@ -32,16 +32,16 @@ namespace MailerConsole
 
         #region Exception
 
-        public void SendErrorToText(Exception ex,string ConStrings)
+        public void SendErrorToText(Exception ex,string ConStrings,string str="")
         {
-            String ErrorlineNo, Errormsg, extype, ErrorLocation;
+            //String ErrorlineNo, Errormsg, extype, ErrorLocation;
 
-            var line = Environment.NewLine + Environment.NewLine;
+           // var line = Environment.NewLine + Environment.NewLine;
 
-            ErrorlineNo = ex.StackTrace.Substring(ex.StackTrace.Length - 7, 7);
-            Errormsg = ex.GetType().Name.ToString();
-            extype = ex.GetType().ToString();
-            ErrorLocation = ex.Message.ToString();
+            //ErrorlineNo = ex?.StackTrace;
+            //Errormsg = ex?.GetType().Name.ToString();
+            //extype = ex.GetType().ToString();
+           // ErrorLocation = ex.Message.ToString();
 
             try
             {
@@ -55,7 +55,8 @@ namespace MailerConsole
                     UserID = 0,
                     Exceptions = ex.StackTrace,
                     MessageException = ex.Message,
-                    IPAddress = ""
+                    IPAddress = "",
+                    
                 };
 
                 InsertErrorLog(errorLogs,ConStrings);
